@@ -1,16 +1,6 @@
 import os
-
 import numpy as np
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
 import tensorflow as tf
-
-tf.get_logger().setLevel('ERROR')
-gpus = tf.config.experimental.list_physical_devices('GPU')
-print(gpus)
-for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpu, True)
 from object_detection.utils import config_util
 import glob
 from object_detection.builders import model_builder
@@ -20,9 +10,22 @@ import matplotlib
 import warnings
 import random
 from PIL import Image
+import pkg_resources
 
 warnings.filterwarnings('ignore')
 matplotlib.use('tkagg')
+
+
+def load_gpu():
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    tf.get_logger().setLevel('ERROR')
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    print(gpus)
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+
+
+load_gpu()
 
 
 class Model:
@@ -134,7 +137,6 @@ class Model:
         detections = self.as_tf_model.postprocess(prediction_dict, shapes)
         return detections
 
-
     def get_tf_detections(self, image_np):
         """
         Pass the input tensor to tensorflow detect function
@@ -198,7 +200,10 @@ class Model:
 
 
 def detection_model_path(name, version):
-    path = os.path.join(f"object_detection\\models\\{name}\\v{version}\\checkpoint")
-    if os.path.isdir(path):
-        return path
-    raise FileNotFoundError(path)
+    checkpoint_path = os.path.join(
+        'c:\\', 'tools', 'models', 'object_detection',
+        name, f"v{version}", 'checkpoint'
+    )
+    if os.path.isdir(checkpoint_path):
+        return checkpoint_path
+    raise FileNotFoundError(checkpoint_path)

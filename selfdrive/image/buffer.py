@@ -1,7 +1,7 @@
 import queue
 import uuid
 import os
-from editor import ImageEditor
+from .editor import ImageEditor
 
 
 class ImageBuffer:

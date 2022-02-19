@@ -1,8 +1,6 @@
 import os
-from base import detection_model_path, Model
-from exceptions import EmptyModel
-
-__all__ = ['load', 'add_dataset', 'detect']
+from .base import detection_model_path, Model
+from .exceptions import EmptyModel
 
 VERSION = 3
 NAME = "speedlimit"
@@ -13,9 +11,10 @@ _model: Model
 
 def load():
     global _model
+    path = detection_model_path(NAME, VERSION)
     _model = Model(
-        ckpt_path=detection_model_path(NAME, VERSION),
-        label_map_path=os.path.join(detection_model_path(NAME, VERSION), LABELMAP_NAME),
+        ckpt_path=path,
+        label_map_path=os.path.join(path, LABELMAP_NAME),
         max_detections=MAX_DETECTIONS
     )
     print("Speedlimit model is ready to detect...")
@@ -24,11 +23,11 @@ def load():
 def valid_model(func):
     global _model
 
-    def inner():
+    def inner(*args):
         global _model
         if not _model:
             raise EmptyModel
-        func()
+        return func(*args)
 
     return inner
 
