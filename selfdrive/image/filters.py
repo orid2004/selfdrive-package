@@ -9,7 +9,7 @@ class Filter:
     shape = None
 
 
-class SpeedLimitCrop(Filter):
+class CROP_SPEEDLIMIT_SCREEN(Filter):
     """
     Speed-limit crop
     -> generates smaller inputs for search-areas crops
@@ -17,7 +17,7 @@ class SpeedLimitCrop(Filter):
     crop = (0, 600, 400, 800)
 
 
-class SearchAreasCrop(Filter):
+class CROP_SPEEDLIMIT_AREA(Filter):
     """
     Speed-limit search area
     -> generates smaller inputs for detection

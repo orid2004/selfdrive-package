@@ -10,22 +10,36 @@ import matplotlib
 import warnings
 import random
 from PIL import Image
-import pkg_resources
 
 warnings.filterwarnings('ignore')
 matplotlib.use('tkagg')
 
-
-def load_gpu():
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-    tf.get_logger().setLevel('ERROR')
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    print(gpus)
-    for gpu in gpus:
-        tf.config.experimental.set_memory_growth(gpu, True)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+tf.get_logger().setLevel('ERROR')
+gpus = tf.config.experimental.list_physical_devices('GPU')
+print(gpus)
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 
-load_gpu()
+def valid_file(func):
+    def inner(self, fname):
+        if os.path.isfile(fname):
+            func(self, fname)
+        else:
+            raise FileNotFoundError("{} is not a file".format(fname))
+
+    return inner
+
+
+def valid_dir(func):
+    def inner(self, dname):
+        if os.path.isdir(dname):
+            func(self, dname)
+        else:
+            raise FileNotFoundError("{} is not a directory".format(dname))
+
+    return inner
 
 
 class Model:
@@ -47,6 +61,7 @@ class Model:
         self.datasets = []
         self.min_score = .75
         self.num_detections = 0
+        self.loaded = False
         self._warmup()
 
     @property
@@ -54,16 +69,18 @@ class Model:
         return self._ckpt_path
 
     @ckpt_path.setter
+    @valid_dir
     def ckpt_path(self, ckpt_path):
-        self._ckpt_path = self._valid_dir(ckpt_path)
+        self._ckpt_path = ckpt_path
 
     @property
     def label_map_path(self):
         return self._label_map_path
 
     @label_map_path.setter
+    @valid_file
     def label_map_path(self, label_map_path):
-        self._label_map_path = self._valid_file(label_map_path)
+        self._label_map_path = label_map_path
 
     @property
     def max_detections(self):
@@ -84,24 +101,6 @@ class Model:
         if len(test_x) > 0:
             for img in random.sample(glob.glob("test\\Limit*.jpg"), len(test_x) if len(test_x) < 5 else 5):
                 self.get_detections(np.array(Image.open(img)))
-
-    @staticmethod
-    def _valid_file(path):
-        """
-        A setter for file paths
-        """
-        if os.path.isfile(path):
-            return path
-        raise FileNotFoundError("{} is not a file".format(path))
-
-    @staticmethod
-    def _valid_dir(path):
-        """
-        A setter for dir paths
-        """
-        if os.path.isdir(path):
-            return path
-        raise FileNotFoundError("{} is not a dir".format(path))
 
     def _find_config(self):
         files = glob.glob(os.path.join(self.ckpt_path, "*.config"))
@@ -137,6 +136,9 @@ class Model:
         detections = self.as_tf_model.postprocess(prediction_dict, shapes)
         return detections
 
+    def allow_detections(self):
+        return self.num_detections <= self.max_detections
+
     def get_tf_detections(self, image_np):
         """
         Pass the input tensor to tensorflow detect function
@@ -168,13 +170,15 @@ class Model:
         else:
             detections = tf_detections
         label_id_offset = 1
-        return viz_utils.get_detections(
+        ret = viz_utils.get_detections(
             detections['detection_boxes'],
             detections['detection_classes'] + label_id_offset,
             detections['detection_scores'],
             self.category_index,
             min_score_thresh=self.min_score
         )
+        self.num_detections += len(ret)
+        return ret
 
     def get_image_np_with_detections(self, image_np, tf_detections=None):
         """

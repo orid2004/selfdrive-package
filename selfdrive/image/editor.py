@@ -21,19 +21,6 @@ class ImageEditor:
     def img(self, img):
         self._img = img
 
-    @staticmethod
-    def _adjust_image_box(box, shape):
-        left, top, right, bottom = box
-        while left < 0:
-            left, right = left + 1, right + 1
-        while right > shape[1]:
-            left, right = left - 1, right - 1
-        while top < 0:
-            top, bottom = top + 1, bottom + 1
-        while bottom > shape[0]:
-            top, bottom = top - 1, bottom - 1
-        return left, top, right, bottom
-
     def crop_circle_box(self, image=None):
         image = self.img if image is None else image
         gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -50,7 +37,7 @@ class ImageEditor:
             for i in range(len(circles[0])):
                 circles = np.uint16(np.around(circles))
                 x, y, r = (int(x) for x in circles[0][i])
-                left, top, right, bottom = self._adjust_image_box(
+                left, top, right, bottom = adjust_image_box(
                     box=(x - 100, y - 100, x + 100, y + 100),
                     shape=image.shape
                 )
@@ -75,3 +62,16 @@ class ImageEditor:
             self.img = cv2.resize(self.img, dsize=im_filter.shape)
 
         return self.img
+
+
+def adjust_image_box(box, shape):
+    left, top, right, bottom = box
+    while left < 0:
+        left, right = left + 1, right + 1
+    while right > shape[1]:
+        left, right = left - 1, right - 1
+    while top < 0:
+        top, bottom = top + 1, bottom + 1
+    while bottom > shape[0]:
+        top, bottom = top - 1, bottom - 1
+    return left, top, right, bottom
