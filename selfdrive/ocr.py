@@ -9,8 +9,7 @@ def load_self():
     warmup_images = [
         'https://storage.googleapis.com/gcptutorials.com/examples/keras-ocr-img-1.jpg',
         'https://storage.googleapis.com/gcptutorials.com/examples/keras-ocr-img-2.png',
-        r'C:\Users\Ori\PycharmProjects\packages\selfdrive\selfdrive\test\Limit-4c1eba6c-7a12-11ec-a633-a44cc849d7a3.jpg',
-        r'C:\Users\Ori\PycharmProjects\packages\selfdrive\selfdrive\test\Limit-4c3e8fa8-7a12-11ec-a8fe-a44cc849d7a3.jpg'
+        'https://i.ibb.co/TgKVLpm/Limit-4c1eba6c-7a12-11ec-a633-a44cc849d7a3.jpg'
     ]
     predict(warmup_images)
 
