@@ -1,2 +1,2 @@
-from . import model, image
-__all__ = [model, image]
+from . import model, image, ocr
+__all__ = [model, image, ocr]
