@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import tensorflow as tf
 from object_detection.utils import config_util
@@ -8,7 +7,10 @@ from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
 import matplotlib
 import warnings
+import os
 import random
+import pkg_resources
+import six
 from PIL import Image
 
 warnings.filterwarnings('ignore')
@@ -170,11 +172,11 @@ class Model:
         else:
             detections = tf_detections
         label_id_offset = 1
-        ret = viz_utils.get_detections(
-            detections['detection_boxes'],
-            detections['detection_classes'] + label_id_offset,
-            detections['detection_scores'],
-            self.category_index,
+        ret = process_tf_detections(
+            boxes=detections['detection_boxes'],
+            classes=detections['detection_classes'] + label_id_offset,
+            scores=detections['detection_scores'],
+            category_index=self.category_index,
             min_score_thresh=self.min_score
         )
         self.num_detections += len(ret)
@@ -204,10 +206,42 @@ class Model:
 
 
 def detection_model_path(name, version):
-    checkpoint_path = os.path.join(
-        'c:\\', 'tools', 'models', 'object_detection',
-        name, f"v{version}", 'checkpoint'
-    )
-    if os.path.isdir(checkpoint_path):
-        return checkpoint_path
-    raise FileNotFoundError(checkpoint_path)
+    ckpt_path = pkg_resources.resource_filename('selfdrive.model', f'object_detection\\{name}\\v{version}\\checkpoint')
+    if os.path.isdir(ckpt_path):
+        return ckpt_path
+    raise FileNotFoundError(ckpt_path)
+
+def process_tf_detections(
+        boxes,
+        classes,
+        scores,
+        category_index,
+        min_score_thresh=.5,
+        agnostic_mode=False,
+        skip_scores=False,
+        skip_labels=False):
+    """
+      Returns:
+         Dict {
+            label->[str]: (score->[int], box->[tuple])
+         }
+      """
+    detections = {}
+    count = 0
+    for i in range(boxes.shape[0]):
+        box = tuple(boxes[i].tolist())
+        display_str, score = "None", 0
+        if scores is not None and scores[i] > min_score_thresh:
+            if not skip_labels:
+                if not agnostic_mode:
+                    if classes[i] in six.viewkeys(category_index):
+                        class_name = category_index[classes[i]]['name']
+                    else:
+                        class_name = 'N/A'
+                    display_str = str(class_name)
+            if not skip_scores:
+                score = int(round(100 * scores[i]))
+        detections[display_str] = (score, box)
+        count += 1
+    if count:
+        return detections

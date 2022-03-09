@@ -1,0 +1,8 @@
+setuptools_scm~=6.3.2
+setuptools~=60.9.3
+numpy~=1.20.3
+opencv-python==4.5.4.60
+tensorflow~=2.7.0
+matplotlib~=3.5.1
+pillow~=8.2.0
+six

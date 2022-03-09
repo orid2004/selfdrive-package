@@ -4,3 +4,4 @@ selfdrive.egg-info/*
 rebuild.bat
 __pycache__/*
 .idea/*
+.eggs/*
