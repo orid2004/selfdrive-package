@@ -1,4 +1,5 @@
 import numpy as np
+import requests
 import tensorflow as tf
 from object_detection.utils import config_util
 import glob
@@ -8,7 +9,7 @@ from object_detection.utils import visualization_utils as viz_utils
 import matplotlib
 import warnings
 import os
-import random
+from io import BytesIO
 import pkg_resources
 import six
 from PIL import Image
@@ -50,7 +51,7 @@ class Model:
     Mainly restores models and detects objects
     """
 
-    def __init__(self, ckpt_path, label_map_path, max_detections, ckpt_index=0):
+    def __init__(self, ckpt_path, label_map_path, max_detections, warmup_set=None, ckpt_index=0):
         self.ckpt_path = ckpt_path
         self.label_map_path = label_map_path
         self.pipeline_path = self._find_config()
@@ -64,7 +65,8 @@ class Model:
         self.min_score = .75
         self.num_detections = 0
         self.loaded = False
-        self._warmup()
+        if warmup_set:
+            self._warmup(warmup_set)
 
     @property
     def ckpt_path(self):
@@ -94,15 +96,18 @@ class Model:
             raise ValueError("Value must be at least 2")
         self._max_detections = max_detections
 
-    def _warmup(self):
+    def _warmup(self, warmup_set):
         """
         Model warmup as ...
         'The TensorFlow runtime has components that are lazily initialized'
         """
-        test_x = glob.glob("test\\Limit*.jpg")
-        if len(test_x) > 0:
-            for img in random.sample(glob.glob("test\\Limit*.jpg"), len(test_x) if len(test_x) < 5 else 5):
-                self.get_detections(np.array(Image.open(img)))
+        for img_url in warmup_set:
+            try:
+                response = requests.get(img_url)
+                img = Image.open(BytesIO(response.content))
+                self.get_detections(np.array(img))
+            except:
+                pass
 
     def _find_config(self):
         files = glob.glob(os.path.join(self.ckpt_path, "*.config"))
@@ -211,15 +216,14 @@ def detection_model_path(name, version):
         return ckpt_path
     raise FileNotFoundError(ckpt_path)
 
+
 def process_tf_detections(
         boxes,
         classes,
         scores,
         category_index,
         min_score_thresh=.5,
-        agnostic_mode=False,
-        skip_scores=False,
-        skip_labels=False):
+        agnostic_mode=False):
     """
       Returns:
          Dict {
@@ -232,14 +236,12 @@ def process_tf_detections(
         box = tuple(boxes[i].tolist())
         display_str, score = "None", 0
         if scores is not None and scores[i] > min_score_thresh:
-            if not skip_labels:
-                if not agnostic_mode:
-                    if classes[i] in six.viewkeys(category_index):
-                        class_name = category_index[classes[i]]['name']
-                    else:
-                        class_name = 'N/A'
-                    display_str = str(class_name)
-            if not skip_scores:
+            if not agnostic_mode:
+                if classes[i] in six.viewkeys(category_index):
+                    class_name = category_index[classes[i]]['name']
+                else:
+                    class_name = 'N/A'
+                display_str = str(class_name)
                 score = int(round(100 * scores[i]))
         detections[display_str] = (score, box)
         count += 1

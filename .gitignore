@@ -5,3 +5,4 @@ rebuild.bat
 __pycache__/*
 .idea/*
 .eggs/*
+README.md
