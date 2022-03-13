@@ -9,7 +9,6 @@ def load_self():
     warmup_images = [
         'https://storage.googleapis.com/gcptutorials.com/examples/keras-ocr-img-1.jpg',
         'https://storage.googleapis.com/gcptutorials.com/examples/keras-ocr-img-2.png',
-        'https://i.ibb.co/TgKVLpm/Limit-4c1eba6c-7a12-11ec-a633-a44cc849d7a3.jpg'
     ]
     predict(warmup_images)
 
