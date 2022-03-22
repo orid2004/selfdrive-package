@@ -2,7 +2,7 @@ setuptools_scm
 setuptools
 numpy
 opencv-python==4.5.4.60
-tensorflow==2.7.0
+tensorflow
 matplotlib
 pillow
 six
