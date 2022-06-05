@@ -5,8 +5,6 @@ class Filter:
     crop = None
     size = None
     cords = None
-    color = None
-    shape = None
 
 
 class CROP_SPEEDLIMIT_SCREEN(Filter):

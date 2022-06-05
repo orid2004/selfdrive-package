@@ -12,7 +12,7 @@ class ImageBuffer:
         if not os.path.isdir(self.path):
             os.makedirs(self.path)
 
-    def add(self, image):
+    def write(self, image):
         self._buffer_queue.put(image)
 
     def save_to_disk(self, label):
